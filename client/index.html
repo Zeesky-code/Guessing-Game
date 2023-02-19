@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guessing Game</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@600&display=swap");
+
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --main: #2b5c19;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+
+        h1 {
+            color: var(--main);
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Welcome to the Guessing Game</h1>
+    <div>
+        <button id="btnCreate">New Game</button>
+        <button id="btnJoin">Join Game</button>
+        <input type="text" id="txtGameId" />
+        <h4 id="idText"></h4>
+    </div>
+    <script>
+        let clientId = null;
+        let gameId = null;
+        let playerColor = null;
+        let ws = new WebSocket("ws://localhost:8080");
+
+        const btnCreate = document.getElementById("btCreate");
+        const btnJoin = document.getElementById("btnJoin");
+        const idText = document.getElementById("idText");
+
+        ws.onmessage = (message) => {
+            const response = JSON.parse(message.data);
+
+            if (response.method === "connect") {
+                clientId = response.clientId;
+                idText.innerText = clientId;
+                console.log(`Client id set successfully ${clientId}`);
+            }
+        };
+    </script>
+</body>
+
+</html>
