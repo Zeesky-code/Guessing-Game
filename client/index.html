@@ -19,7 +19,7 @@
         nav{
             display: grid;
             grid-template-columns: 60% 1fr 1fr;
-            background: rgb(253, 202, 202);
+            background: #ffd6ff;
             justify-content: center;
         }
 
@@ -33,7 +33,8 @@
         }
 
         button{
-            
+            border-radius: 2px;
+            background-color: #bde0fe;
         }
         #idText{
             display: flex;
@@ -142,12 +143,16 @@
         //import Player from "./player";
         //const Player = require("./player")
         const socket = io("ws://localhost:8080");
-        const btnCreate = document.getElementById("btCreate");
+        const btnCreate = document.getElementById("btnCreate");
         const btnJoin = document.getElementById("btnJoin");
         const idText = document.getElementById("idText");
         //let clientId = null;
         let gameId = null;
         let playerColor = null;
+
+        btnCreate.addEventListener("click", e => {
+            socket.emit("create", socket.id)
+        })
         socket.on("connect", () => {
             const name = prompt("What is your name?");
 
@@ -157,7 +162,9 @@
                 const user = new Player({name: name, id: clientId})
                 console.log(user)
                 idText.innerText = user.name;
-        });
+            });
+
+            
             //const response = JSON.parse(message.data);
             //console.log(response);
 

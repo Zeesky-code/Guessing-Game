@@ -3,12 +3,18 @@ const express = require("express");
 const app = express();
 const httpServer = http.createServer(app);
 
-//const websocketServer = require("websocket").server;
+const game = require('./game');
 
 const { Server } = require("socket.io");
 const io = new Server(httpServer);
 
+const Game = new game({io});
+
 io.on("connection", (socket) => {
+    socket.on("create", (id)=> {
+        Game.create(id);
+        console.log(Game)
+    })
     console.log("connected")
 
     //generate a new clientId
