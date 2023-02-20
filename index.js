@@ -1,28 +1,45 @@
 const http = require("http");
 const express = require("express");
-const path = require("path");
-const app = require("express")();
-const bodyParser = require('body-parser');
-const websocketServer = require("websocket").server;
+const app = express();
+const httpServer = http.createServer(app);
 
+//const websocketServer = require("websocket").server;
+
+const { Server } = require("socket.io");
+const io = new Server(httpServer);
+
+io.on("connection", (socket) => {
+    console.log("connected")
+
+    //generate a new clientId
+    const clientId = socket.id;
+    clients[clientId] = {
+        "connection":  clientId
+    }
+    const payLoad = {
+        method: "connect",
+        clientId: socket.id
+    }
+    //send back the client connect
+    socket.emit("payload", JSON.stringify(payLoad))
+})
 const games = {};
 const clients = {};
 
 // serve the client
-app.use(bodyParser.urlencoded({extended: false}));
- app.use(express.static(path.join(__dirname, 'client')));
- 
-app.get("/", (req,res) => res.sendFile(__dirname + "/client/index.html"));
+app.get("/", (req,res) => {
+    res.sendFile(__dirname + "/client/index.html")
+});
 
 //the actual server
-const httpServer = http.createServer(app);
-httpServer.listen(8080, () => console.log("Listening on... 8080"));
 
-const wsServer =  new websocketServer({
-    "httpServer": httpServer
-})
 
-wsServer.on("request", request => {
+
+// const wsServer =  new websocketServer({
+//   "httpServer": httpServer
+//})
+
+/**  wsServer.on("request", request => {
     const connection = request.accept(null, request.origin);
     connection.on("open", () => console.log("Connection Opened!"));
     connection.on("close", () => console.log("Connection Closed!"));
@@ -60,10 +77,6 @@ wsServer.on("request", request => {
     //send back the client connect
     connection.send(JSON.stringify(payLoad))
 })
+*/ 
 
-function S4() {
-    return (((1+Math.random())*0x10000)|0).toString(16).substring(1); 
-}
- 
-// then to call it, plus stitch in '4' in the third group
-const guid = () => (S4() + S4() + "-" + S4() + "-4" + S4().substr(0,3) + "-" + S4() + "-" + S4() + S4() + S4()).toLowerCase();
+httpServer.listen(8080, () => console.log("Listening on... 8080"));
