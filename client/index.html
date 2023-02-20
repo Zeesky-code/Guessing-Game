@@ -151,7 +151,7 @@
         let playerColor = null;
 
         btnCreate.addEventListener("click", e => {
-            socket.emit("create", socket.id)
+            socket.emit("create", Player)
         })
         socket.on("connect", () => {
             const name = prompt("What is your name?");

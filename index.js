@@ -11,8 +11,8 @@ const io = new Server(httpServer);
 const Game = new game({io});
 
 io.on("connection", (socket) => {
-    socket.on("create", (id)=> {
-        Game.create(id);
+    socket.on("create", (Player)=> {
+        Game.create(Player);
         console.log(Game)
     })
     console.log("connected")
