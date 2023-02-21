@@ -41,48 +41,6 @@ app.get("/", (req,res) => {
 
 
 
-// const wsServer =  new websocketServer({
-//   "httpServer": httpServer
-//})
 
-/**  wsServer.on("request", request => {
-    const connection = request.accept(null, request.origin);
-    connection.on("open", () => console.log("Connection Opened!"));
-    connection.on("close", () => console.log("Connection Closed!"));
-    connection.on("message", message => {
-        const result = JSON.parse(message.utf8Data)
-        if (result.method === "create"){
-            const clientId = result.clientId;
-            const word = result.word;
-            const gameId = guid();
-            games[gameId] = {
-                "id": gameId,
-                "word": word,
-                "clients": []
-            }
-            const payload ={
-                "method": "create",
-                "game": games[gameId]
-            }
-
-            const con = clients[clientId].connection;
-            con.send(JSON.stringify(payload));
-        }
-    })
-
-    //generate a new clientId
-    const clientId = guid();
-    clients[clientId] = {
-        "connection":  connection
-    }
-
-    const payLoad = {
-        "method": "connect",
-        "clientId": clientId
-    }
-    //send back the client connect
-    connection.send(JSON.stringify(payLoad))
-})
-*/ 
 
 httpServer.listen(8080, () => console.log("Listening on... 8080"));
