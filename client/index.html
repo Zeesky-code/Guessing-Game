@@ -140,8 +140,7 @@
                 this.score = 0;
             }
         }
-        //import Player from "./player";
-        //const Player = require("./player")
+
         const socket = io("ws://localhost:8080");
         const btnCreate = document.getElementById("btnCreate");
         const btnJoin = document.getElementById("btnJoin");
@@ -164,35 +163,10 @@
                 idText.innerText = user.name;
             });
 
-            
-            //const response = JSON.parse(message.data);
-            //console.log(response);
 
-        //     if (response.method === "connect") {
-        //         clientId = response.clientId;
-        //         idText.innerText = clientId;
-        //         console.log(`Client id set successfully ${clientId}`);
-        //     }
             console.log(socket.id); // x8WIv7-mJelg7on_ALbx
         });
-        
-        
 
-
-    
-
-
-        
-
-        // ws.onmessage = (message) => {
-        //     const response = JSON.parse(message.data);
-
-        //     if (response.method === "connect") {
-        //         clientId = response.clientId;
-        //         idText.innerText = clientId;
-        //         console.log(`Client id set successfully ${clientId}`);
-        //     }
-        // };
     </script>
 </body>
 
