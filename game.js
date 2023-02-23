@@ -1,9 +1,18 @@
 const Player = require("./player");
+const Question = require('./question');
 
 //enums for game state
 const GAME_STATES = {
     IN_PROGRESS:"in_progress",
     IDLE: "idle"
+}
+
+class GameEvent {
+    constructor({ data, eventName, message } ) {
+        this.data = data;
+        this.eventName = eventName;
+        this.message = message;
+    }
 }
 
 class Game{
