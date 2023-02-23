@@ -11,11 +11,6 @@ const io = new Server(httpServer);
 const Game = new game({io});
 
 io.on("connection", (socket) => {
-    socket.on("create", (Player)=> {
-        Game.create(Player);
-        console.log(Game)
-    })
-    console.log("connected")
 
     //generate a new clientId
     const clientId = socket.id;
@@ -28,6 +23,16 @@ io.on("connection", (socket) => {
     }
     //send back the client connect
     socket.emit("payload", JSON.stringify(payLoad))
+    console.log(`User ${socket.id} connected`)
+
+    socket.on("disconnect", () => {
+        (`User ${socket.id} disconnected`)
+    });
+
+    socket.on("create", (Player)=> {
+        Game.create(Player);
+        console.log(Game)
+    })
 })
 const games = {};
 const clients = {};
