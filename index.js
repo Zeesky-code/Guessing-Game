@@ -1,51 +1,46 @@
-const http = require("http");
 const express = require("express");
 const app = express();
-const httpServer = http.createServer(app);
+const http = require("http");
+const server = http.createServer(app);
 
-const game = require('./game');
+const GameSession = require('./game');
+
 
 const { Server } = require("socket.io");
-const io = new Server(httpServer);
+const io = new Server(server);
 
-const Game = new game({io});
+app.get("/", (req, res) => {
+  res.sendFile(__dirname + "/client/index.html");
+});
+
+const gameSession = new GameSession({ io });
 
 io.on("connection", (socket) => {
 
-    //generate a new clientId
-    const clientId = socket.id;
-    clients[clientId] = {
-        "connection":  clientId
-    }
-    const payLoad = {
-        method: "connect",
-        clientId: socket.id
-    }
-    //send back the client connect
-    socket.emit("payload", JSON.stringify(payLoad))
-    console.log(`User ${socket.id} connected`)
 
-    socket.on("disconnect", () => {
-        (`User ${socket.id} disconnected`)
-    });
+  socket.on('join', (event) => {
+      gameSession.join({event, socket});
+  })
 
-    socket.on("create", (Player)=> {
-        Game.create(Player);
-        console.log(Game)
-    })
-})
-const games = {};
-const clients = {};
+  socket.on("disconnect", () => {
+    gameSession.exit({ socket });
+    console.log('User exited')
+  });
 
-// serve the client
-app.get("/", (req,res) => {
-    res.sendFile(__dirname + "/client/index.html")
+  socket.on("create_question", (event) => {
+    gameSession.createQuestion({ socket, event });
+    console.log('Question created')
+  });
+
+  socket.on('guess_answer', (event) => {
+    gameSession.guessAnswer({ socket, event });
+    console.log('Answer guessed')
+  })
+
+  console.log("a user connected", socket.id);
+  socket.broadcast.emit("user_connected", "A user connected");
 });
 
-//the actual server
-
-
-
-
-
-httpServer.listen(8080, () => console.log("Listening on... 8080"));
+server.listen(8080, () => {
+  console.log("listening on *:8080");
+});

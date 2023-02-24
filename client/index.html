@@ -1,47 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Guessing Game</title>
+    <title>Socket.IO chat</title>
     <style>
         body {
             margin: 0;
             padding-bottom: 3rem;
-            height: 100vh;
-            display: grid;
-            grid-template-rows: 10% 1fr;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
-        nav{
-            display: grid;
-            grid-template-columns: 60% 1fr 1fr;
-            background: #ffd6ff;
-            justify-content: center;
-        }
-
-        nav input{
-            background-color: transparent;
-        }
-
-        .joinDiv{
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-        }
-
-        button{
-            border-radius: 2px;
-            background-color: #bde0fe;
-        }
-        #idText{
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding-top: 0;
-        }
         #form {
             background: rgba(0, 0, 0, 0.15);
             padding: 0.25rem;
@@ -97,7 +65,7 @@
         }
 
         #messages>li:nth-child(odd) {
-            background: #efefef;
+            background: #f8e6e6;
         }
 
         #timer {
@@ -112,61 +80,183 @@
             line-height: 33px;
         }
     </style>
+
 </head>
 
 <body>
-    <nav>
-        <h1>Guessing Game</h1>
-        <div>
-            <button id="btnCreate">New Game</button>
-        </div>
-        <div class="joinDiv">
-            <button id="btnJoin">Join Game</button>
-            <input type="text" id="txtGameId" />
-        </div>
-        
-    </nav>
-    
-    <div>
-        
-        <h4 id="idText"></h4>
-    </div>
-    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin="anonymous"></script>
-    <script >
-        class Player {
-            constructor({ name,  id }) {
-                this.id = id;
-                this.name = name;
-                this.score = 0;
+    <ul id="messages"></ul>
+    <form id="form" action="">
+        <!-- <input id="input" autocomplete="off" placeholder="message" /><input id="name" placeholder="name" autocomplete="off" /><button>Send</button> -->
+    </form>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        let socket = null
+
+        const form = document.getElementById('form');
+        const input = document.getElementById('input');
+        const name = document.getElementById('name');
+
+        const createQnA = (player) => {
+            if (player.isGameMaster) {
+                const question = document.createElement('input');
+                question.id = 'question';
+                question.placeholder = 'Create question';
+                question.name = 'question';
+                question.required = true;
+
+                const answer = document.createElement('input');
+                answer.id = 'answer';
+                answer.placeholder = 'What is the answer?';
+                answer.name = 'answer';
+                answer.required = true;
+
+                form.append(question)
+                form.append(answer)
+
+                const button = document.createElement('button');
+                button.innerText = 'Create question'
+                form.append(button);
+
+                const timer = document.createElement('p');
+                timer.id = 'timer'
+                timer.innerText = '60s'
+                form.append(timer);
+            } else {
+                const answer = document.createElement('input');
+                answer.id = 'answer';
+                answer.placeholder = 'What is the answer?';
+                answer.name = 'answer';
+                answer.required = true;
+
+                form.append(answer)
+
+                const button = document.createElement('button');
+                button.innerText = 'Guess the answer'
+                form.append(button);
+
+                const timer = document.createElement('p');
+                timer.id = 'timer'
+                timer.innerText = '60s'
+                form.append(timer);
             }
         }
 
-        const socket = io("ws://localhost:8080");
-        const btnCreate = document.getElementById("btnCreate");
-        const btnJoin = document.getElementById("btnJoin");
-        const idText = document.getElementById("idText");
-        //let clientId = null;
-        let gameId = null;
-        let playerColor = null;
+        const createChat = (event, message) => {
+            console.log('server_says', event)
+            const item = document.createElement('li');
+            item.textContent = message || event.message;
+            messages.appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+        }
 
-        btnCreate.addEventListener("click", e => {
-            socket.emit("create", Player)
-        })
-        socket.on("connect", () => {
-            const name = prompt("What is your name?");
+        window.addEventListener('load', () => {
+            localStorage.clear()
+            const name = prompt('Enter your name: ')
+            socket = io();
+            let player;
 
-            socket.on("payload", (payload) => {
-                const response = JSON.parse(payload);
-                var clientId = response["clientId"];
-                const user = new Player({name: name, id: clientId})
-                console.log(user)
-                idText.innerText = user.name;
+            socket.emit('join', { event: 'join', data: { name } })
+
+            socket.on('join_error', function (data) {
+                if (!localStorage.getItem('player')) {
+                    console.log('server_says', data)
+                    window.alert(data.message)
+                    location.reload();
+                }
+            })
+
+            socket.on('new_game_master', function (event) {
+                console.log('server_says', event)
+
+                const alreadyInGame = localStorage.getItem('player');
+
+                if (!alreadyInGame) return;
+                const players = event.data
+
+                const player = players.find(player => player.id === socket.id);
+
+                localStorage.setItem('player', JSON.stringify(player));
+
+                form.innerHTML = ''
+
+                createQnA(player);
+                if (player.isGameMaster) {
+                    createChat(event, 'You are now the game master')
+                } else {
+                    createChat(event)
+                }
+            })
+
+            socket.on('time', function (event) {
+                const timer = document.getElementById('timer')
+                timer.innerHTML = `${event.message}s`;
+            })
+
+            socket.on('general_message', function (event) {
+                createChat(event)
+            })
+
+            socket.on('time_expired', function (event) {
+                createChat(event)
+            })
+
+            socket.on('guess', function (event) {
+                createChat(event)
+            })
+
+            socket.on('question_created', function (event) {
+                createChat(event)
+            })
+
+            socket.on('player_joined', function (event) {
+                console.log('server_says', event)
+                createChat(event)
+
+                player = event.data.player;
+
+                const alreadyInGame = localStorage.getItem('player');
+
+                if (!alreadyInGame) {
+                    localStorage.setItem('player', JSON.stringify(player));
+                }
+
+                if (!alreadyInGame) {
+                    createQnA(player);
+                }
+
+                if (!player.isGameMaster && !alreadyInGame) {
+                    createChat(event, `Welcome to the game "${event.data.player.name}"". Our Game Master "${event.data.gameMaster.name}" is creating a question`)
+                }
             });
 
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
 
-            console.log(socket.id); // x8WIv7-mJelg7on_ALbx
-        });
+                const question = document.getElementById('question');
+                const answer = document.getElementById('answer');
 
+                if (question && answer) {
+                    const data = {
+                        eventName: 'create_question',
+                        question: question.value,
+                        answer: answer.value
+                    }
+
+                    console.log('create_question', data);
+                    socket.emit('create_question', data);
+                } else {
+                    const data = {
+                        eventName: 'guess_answer',
+                        answer: answer.value
+                    }
+
+                    console.log('guess_answer', data);
+                    socket.emit('guess_answer', data);
+                }
+
+            });
+
+        })
     </script>
 </body>
 
